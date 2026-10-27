@@ -117,9 +117,15 @@ def pdf_page_source_id(document_id: str, document_sha256: str, page_number: int)
 
 
 def _extract_page_text(page: Any) -> str:
-    text = page.extract_text()
+    try:
+        text = page.extract_text(extraction_mode="layout")
+    except Exception:
+        text = page.extract_text()
     if not text:
         return ""
+    lines = [re.sub(r"[ \t]+", " ", line).rstrip() for line in text.split("\n")]
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
 
