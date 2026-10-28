@@ -895,7 +895,42 @@ RECALL_TOKEN_DAILY_TABLE = Table(
     CheckConstraint("recalled_tokens >= 0", name="ck_pc_recall_token_daily_recalled_nonnegative"),
 )
 
+SOURCE_LIFECYCLE_NODES_TABLE = Table(
+    "pc_source_lifecycle_nodes",
+    SHARED_METADATA,
+    Column("scope_id", identity_string(MAX_SCOPE_ID_LENGTH), primary_key=True),
+    Column("node_id", identity_string(255), primary_key=True),
+    Column("kind", identity_string(16), nullable=False),
+    Column("reference_payload", _entry_text_type(), nullable=False),
+    Column("parents_payload", _entry_text_type(), nullable=False),
+    Column("binding_payload", _entry_text_type(), nullable=False),
+    Column("policy", identity_string(8)),
+    Column("revision", Integer),
+    Column("node_order", Integer, nullable=False),
+    Column("available_state", Integer, nullable=False),
+    CheckConstraint("kind IN ('source', 'memory', 'topic')", name="ck_pc_source_lifecycle_nodes_kind"),
+    CheckConstraint("policy IS NULL OR policy IN ('all', 'any')", name="ck_pc_source_lifecycle_nodes_policy"),
+    CheckConstraint("revision IS NULL OR revision > 0", name="ck_pc_source_lifecycle_nodes_revision"),
+    CheckConstraint("node_order > 0", name="ck_pc_source_lifecycle_nodes_order_positive"),
+    CheckConstraint("available_state IN (0, 1)", name="ck_pc_source_lifecycle_nodes_available"),
+)
+
+SOURCE_LIFECYCLE_EVENTS_TABLE = Table(
+    "pc_source_lifecycle_events",
+    SHARED_METADATA,
+    Column("scope_id", identity_string(MAX_SCOPE_ID_LENGTH), primary_key=True),
+    Column("node_id", identity_string(255), primary_key=True),
+    Column("event_sequence", Integer, primary_key=True),
+    Column("content_payload", _entry_text_type(), nullable=False),
+    Column("available_state", Integer, nullable=False),
+    CheckConstraint("event_sequence > 0", name="ck_pc_source_lifecycle_events_sequence_positive"),
+    CheckConstraint("available_state IN (0, 1)", name="ck_pc_source_lifecycle_events_available"),
+)
+
+
 SHARED_TABLES = (
+    SOURCE_LIFECYCLE_NODES_TABLE,
+    SOURCE_LIFECYCLE_EVENTS_TABLE,
     SOURCE_JOURNAL_HEADS_TABLE,
     SOURCES_TABLE,
     ARTIFACTS_TABLE,

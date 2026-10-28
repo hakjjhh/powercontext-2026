@@ -152,6 +152,7 @@ from powercontext.builtin.persistence.recurrence import RecurrenceRepository
 from powercontext.builtin.persistence.skill_packages import SkillPackageRepository
 from powercontext.builtin.persistence.skill_publications import SkillPublicationRepository
 from powercontext.builtin.persistence.source_definitions import SourceDefinitionManifestRepository
+from powercontext.builtin.persistence.source_lifecycle import SourceLifecycleStore
 from powercontext.builtin.persistence.sources import SourceRepository, StoredSource
 from powercontext.builtin.persistence.statistics import StatisticsRepository
 from powercontext.builtin.persistence.supervision import (
@@ -549,6 +550,7 @@ class RelationalContexts:
         model_usage_flush_timeout_seconds: float = 0.5,
     ) -> None:
         self.database = database
+        self.lifecycle = SourceLifecycleStore(database)
         self.scopes = ScopeApplication(database, cursor_secret=cursor_secret)
         self.source_registry = source_registry or BUILTIN_SOURCE_REGISTRY
         self.index = NoMemoryIndex() if index is None else index
@@ -991,7 +993,8 @@ class RelationalContexts:
             embedding_profile = query_embedding.embedding_profile
         scope = validate_scope_id(scope_id)
         async with self.database.transaction() as connection:
-            return await self.repositories.topic_memories.search(
+            blocked = await self.lifecycle.blocked_topic_artifact_ids(connection, scope)
+            result = await self.repositories.topic_memories.search(
                 connection,
                 scope,
                 query,
@@ -1001,6 +1004,12 @@ class RelationalContexts:
                 embedding_profile=embedding_profile,
                 admission=admission,
             )
+        if not blocked:
+            return result
+        hits = tuple(hit for hit in result.hits if hit.artifact_ref.artifact_id not in blocked)
+        if len(hits) == len(result.hits):
+            return result
+        return result.model_copy(update={"hits": hits})
 
     async def search_skills(
         self,
