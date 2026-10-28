@@ -156,6 +156,7 @@ from powercontext.builtin.runtime.readiness import (
 )
 from powercontext.builtin.runtime.recall_sufficiency import RecallSufficiencyPolicy
 from powercontext.builtin.runtime.relational import RelationalContexts
+from powercontext.builtin.runtime.source_count import SourceCountDriver
 from powercontext.builtin.runtime.topic_memory_processing import (
     TopicMemoryWorkerSpec,
     run_topic_memory_worker,
@@ -666,6 +667,15 @@ async def open_builtin_runtime(
         if config.runtime.memory_rerank_enabled and configured_reranker is None:
             raise BuiltinConfigurationError("memory-reranker")
         _require_decision_backend(config.runtime, configured_decision)
+        source_count_thresholds = _source_count_thresholds(
+            config,
+            {binding.artifact_family for binding in processing_bindings},
+            topic_memory_processing_available=topic_memory_processing_available,
+        )
+        if source_count_thresholds:
+            await resources.enter_async_context(
+                SourceCountDriver(runtime, contexts, source_count_thresholds),
+            )
         yield runtime
 
 
@@ -810,6 +820,26 @@ def _topic_memory_processing_available(
     return any(binding.binding_name == TOPIC_MEMORY_SOURCE_WINDOW_BINDING for binding in bindings) or (
         config.runtime.artifact_processing_role == "api" and "topic-memory" in processing_capabilities(config)
     )
+
+
+def _source_count_thresholds(
+    config: BuiltinConfig,
+    registered_families: set[str],
+    *,
+    topic_memory_processing_available: bool,
+) -> dict[str, int]:
+    """Resolve the families whose Source count reaches an admission threshold."""
+
+    if config.runtime.artifact_processing_role == "api":
+        return {}
+    candidates = {"memory": config.runtime.memory_source_count_threshold}
+    if topic_memory_processing_available:
+        candidates["topic-memory"] = config.runtime.topic_memory_source_count_threshold
+    return {
+        family: int(threshold)
+        for family, threshold in candidates.items()
+        if threshold is not None and family in registered_families
+    }
 
 
 def _topic_memory_provider_available(config: BuiltinConfig) -> bool:
