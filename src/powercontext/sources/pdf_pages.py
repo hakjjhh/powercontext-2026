@@ -56,6 +56,49 @@ _HEADING_WEIGHT = 0.4
 _HEADING_LINES = 15
 _HEADING_MIN_TERMS = 2
 _FTS_POOL = 60
+_NUMBER_BONUS = 6.0
+_STATEMENT_BONUS = 1.5
+_STATEMENT_QUERY_BONUS = 6.0
+_TOC_PENALTY = 0.6
+_DENSE_TABLE_BONUS = 4.0
+_BUSINESS_BONUS = 1.2
+_SECTION_BONUS = 3.0
+_SECTION_LEGAL_Q = re.compile(r"\blegal\b|\blitigation\b|\blawsuit", re.IGNORECASE)
+_SECTION_BUSINESS_Q = re.compile(r"\bcustomer|\bcyclical|\bsegment|\bproduct|\bbusiness\b|\bservice", re.IGNORECASE)
+_SECTION_MDA_Q = re.compile(r"\bliquidity|\bmargin|\btax\b|\bcapital|\bratio\b|\brevenue\b|\bgrowth\b", re.IGNORECASE)
+_SECTION_STATEMENT_Q = re.compile(
+    r"\bbalance\s+sheet\b|\b(?:income|cash\s+flow|operations)\s+statements?\b|\bp\s*&\s*l\b|"
+    r"\b(?:quick|current)\s+ratio\b|\bgross\s+margin\b",
+    re.IGNORECASE,
+)
+_TOC_SCAN_PAGES = 4
+_TOC_ITEM = re.compile(r"\bitem\s+([0-9]{1,2}[a-c]?)\b", re.IGNORECASE)
+_TOC_PAGE_NUMBER = re.compile(r"(?<![\d-])(\d{1,3})(?![\d-])")
+_TOC_ITEM_CODES = frozenset(
+    {"1", "1a", "1b", "2", "3", "4", "5", "6", "7", "7a", "8", "9", "9a", "9b", "9c"}
+    | {str(number) for number in range(10, 17)}
+)
+_NEIGHBOR_WEIGHT = 0.2
+_BUSINESS_QUESTION = re.compile(r"\bcustomer|\bcyclical|\bsegment|\bproduct|\bbusiness\b|\bservice", re.IGNORECASE)
+_BUSINESS_MARKERS = frozenset({"customer","customers","segment","segments","business","product","products","cyclical","backlog"})
+_NUMERIC_QUESTION = re.compile(r"[0-9%$]|\bratio\b|\bpercent|\bchange\b|\bhow much\b|\bhow many\b|\bcost\b|\bamount\b", re.IGNORECASE)
+_STATEMENT_TITLES = (
+    "consolidated balance sheet",
+    "consolidated statement of earnings",
+    "consolidated statements of earnings",
+    "consolidated statement of income",
+    "consolidated statements of income",
+    "consolidated statement of cash flows",
+    "consolidated statements of cash flows",
+    "consolidated statement of operations",
+    "consolidated statements of operations",
+    "notes to consolidated financial statements",
+    "consolidated statement of financial position",
+    "consolidated statements of financial position",
+    "consolidated statements of changes in equity",
+    "consolidated statements of comprehensive income",
+    "consolidated statement of comprehensive income",
+)
 
 # Generic finance and legal vocabulary, so a question phrased with everyday words still
 # reaches the section that uses the filing's own wording. Added terms never remove the
@@ -369,11 +412,80 @@ def _query_phrases(question: str) -> tuple[tuple[str, ...], ...]:
     return tuple(phrases)
 
 
+def _toc_entries(pages: list[tuple[int, str]]) -> tuple[dict[str, int], frozenset[int]]:
+    """Extract Item-to-page entries from the first few pages of a filing."""
+
+    candidates: list[tuple[int, str]] = []
+    for page_number, text in pages[:_TOC_SCAN_PAGES]:
+        if len(_TOC_ITEM.findall(text)) >= 5:
+            candidates.append((page_number, text))
+    entries: dict[str, int] = {}
+    for index, (_page_number, text) in enumerate(candidates):
+        if index == 0:
+            part_one = re.search(r"\bpart\s+i\b", text, re.IGNORECASE)
+            if part_one:
+                text = text[part_one.start() :]
+        matches = list(_TOC_ITEM.finditer(text))
+        for match_index, match in enumerate(matches):
+            item = match.group(1).casefold()
+            if item not in _TOC_ITEM_CODES:
+                continue
+            end = matches[match_index + 1].start() if match_index + 1 < len(matches) else len(text)
+            segment = re.sub(r"\b10-k\b", "", text[match.end() : end], flags=re.IGNORECASE)
+            page_match = _TOC_PAGE_NUMBER.search(segment)
+            if page_match:
+                entries.setdefault(item, int(page_match.group(1)))
+    return entries, frozenset(page_number for page_number, _text in candidates)
+
+
+def _toc_section_ranges(pages: list[tuple[int, str]]) -> dict[str, tuple[int, int]]:
+    """Map each Form 10-K Item to its physical page interval."""
+
+    entries, toc_pages = _toc_entries(pages)
+    if len(entries) < 5 or not pages:
+        return {}
+    occurrences: dict[str, list[int]] = {}
+    for item in entries:
+        item_pattern = re.compile(rf"\bitem\s+{re.escape(item)}\b", re.IGNORECASE)
+        occurrences[item] = [
+            page_number
+            for page_number, text in pages
+            if page_number not in toc_pages and item_pattern.search(text)
+        ]
+    votes: Counter[int] = Counter()
+    for item, printed_page in entries.items():
+        for physical_page in occurrences[item]:
+            offset = physical_page - printed_page
+            if -10 <= offset <= 30:
+                votes[offset] += 1
+    if not votes:
+        return {}
+    offset, support = max(votes.items(), key=lambda item: (item[1], -abs(item[0])))
+    if support < max(2, len(entries) // 4):
+        return {}
+
+    last_page = pages[-1][0]
+    starts = {
+        item: printed_page + offset
+        for item, printed_page in entries.items()
+        if 1 <= printed_page + offset <= last_page
+    }
+    ranges: dict[str, tuple[int, int]] = {}
+    for item, start in starts.items():
+        later_starts = [candidate for candidate in starts.values() if candidate > start]
+        end = min(later_starts) - 1 if later_starts else last_page
+        ranges[item] = (start, end)
+    return ranges
+
+
 class _PDFPageIndex:
     """A per-scope lexical index over every page stored in one Memory."""
 
     def __init__(
-        self, documents: list[tuple[Any, str, Counter[str], int, str, frozenset[str], str]]
+        self,
+        documents: list[
+            tuple[Any, str, Counter[str], int, str, frozenset[str], str, float, bool, int, frozenset[str]]
+        ],
     ) -> None:
         self._documents = documents
         self._count = len(documents)
@@ -395,6 +507,18 @@ class _PDFPageIndex:
         frequency = self._document_frequency.get(term, 0)
         return math.log(1.0 + (self._count - frequency + 0.5) / (frequency + 0.5))
 
+    @staticmethod
+    def _wanted_sections(question: str) -> frozenset[str]:
+        wanted: set[str] = set()
+        if _SECTION_LEGAL_Q.search(question):
+            wanted.add("3")
+        elif _SECTION_MDA_Q.search(question):
+            wanted.update(("7", "7a"))
+        elif _SECTION_BUSINESS_Q.search(question):
+            wanted.update(("1", "1a"))
+        if _SECTION_STATEMENT_Q.search(question):
+            wanted.add("8")
+        return frozenset(wanted)
     def _scoped_document(self, question: str) -> str | None:
         """Return the single document the question names, if exactly one dominates."""
 
@@ -421,7 +545,23 @@ class _PDFPageIndex:
         scored: list[tuple[float, str, Any]] = []
         average_length = self._average_length or 1.0
         scope = self._scoped_document(question)
-        for citation, key, counts, length, joined, head_terms, document in self._documents:
+        numeric = _NUMERIC_QUESTION.search(question) is not None
+        business = _BUSINESS_QUESTION.search(question) is not None
+        wanted = self._wanted_sections(question)
+        statement_query = _SECTION_STATEMENT_Q.search(question) is not None
+        for (
+            citation,
+            key,
+            counts,
+            length,
+            joined,
+            head_terms,
+            document,
+            density,
+            has_statement,
+            toc_hits,
+            sections,
+        ) in self._documents:
             if scope is not None and document != scope:
                 continue
             score = 0.0
@@ -443,9 +583,23 @@ class _PDFPageIndex:
             head_matched = [term for term in weights if term in head_terms]
             if len(head_matched) >= _HEADING_MIN_TERMS:
                 score += _HEADING_WEIGHT * sum(weights[term] for term in head_matched)
+            if wanted and not wanted.isdisjoint(sections):
+                score += _SECTION_BONUS
+            if business and not numeric:
+                score += _BUSINESS_BONUS * len(_BUSINESS_MARKERS & counts.keys())
+            if numeric:
+                score += _NUMBER_BONUS * density
+                if density >= 0.22:
+                    score += _DENSE_TABLE_BONUS
+            if has_statement:
+                score += _STATEMENT_BONUS
+                if statement_query:
+                    score += _STATEMENT_QUERY_BONUS
+            score -= _TOC_PENALTY * min(toc_hits, 4)
             scored.append((score, key, citation))
+        scored = _smooth_neighbors(scored)
         scored.sort(key=lambda item: (-item[0], item[1]))
-        return [citation for _score, _key, citation in scored[:limit]]
+        return [(score, citation) for score, _key, citation in scored[:limit]]
 
 
 _INDEX_CACHE: dict[int, tuple[Any, _PDFPageIndex]] = {}
@@ -457,8 +611,37 @@ def _layout_key(entry: Any) -> str:
     return "\x00".join(identifiers) or entry.entry.entry_id
 
 
+def _split_key(key: str) -> tuple[str, int | None]:
+    head, _, tail = key.rpartition(":")
+    return head, int(tail) if tail.isdigit() else None
+
+
+def _smooth_neighbors(scored: list[tuple[float, str, Any]]) -> list[tuple[float, str, Any]]:
+    """A table or section often crosses a page boundary, so lift pages next to a strong one."""
+
+    by_page: dict[tuple[str, int], tuple[float, str, Any]] = {}
+    loose: list[tuple[float, str, Any]] = []
+    for score, key, citation in scored:
+        document, page = _split_key(key)
+        if page is None:
+            loose.append((score, key, citation))
+        else:
+            by_page[(document, page)] = (score, key, citation)
+    smoothed: list[tuple[float, str, Any]] = []
+    for (document, page), (score, key, citation) in by_page.items():
+        neighbours = [
+            by_page[(document, page + step)][0]
+            for step in (-1, 1)
+            if (document, page + step) in by_page
+        ]
+        boosted = score + _NEIGHBOR_WEIGHT * max(neighbours) if neighbours else score
+        smoothed.append((boosted, key, citation))
+    return smoothed + loose
+
+
 def _build_index(entries: tuple[Any, ...]) -> _PDFPageIndex:
-    documents: list[tuple[Any, str, Counter[str], int, str, frozenset[str], str]] = []
+    raw_documents: list[tuple[Any, str, list[str], str, frozenset[str], str, int | None]] = []
+    page_texts: dict[str, list[tuple[int, str]]] = {}
     seen: set[str] = set()
     for entry in entries:
         if getattr(entry, "state", "active") != "active":
@@ -474,21 +657,43 @@ def _build_index(entries: tuple[Any, ...]) -> _PDFPageIndex:
         if not tokens:
             continue
         document = text.splitlines()[0].strip() if text.splitlines() else ""
+        _source_key, page_number = _split_key(key)
         head_lines = [line for line in text.splitlines()[1:] if line.strip()][:_HEADING_LINES]
         head_terms = frozenset(_tokenize(" ".join(head_lines)))
+        joined = " " + " ".join(tokens) + " "
+        raw_documents.append((entry.citation, key, tokens, joined, head_terms, document, page_number))
+        if page_number is not None:
+            page_texts.setdefault(document, []).append((page_number, text))
+
+    section_ranges = {
+        document: _toc_section_ranges(sorted(pages)) for document, pages in page_texts.items()
+    }
+    documents: list[
+        tuple[Any, str, Counter[str], int, str, frozenset[str], str, float, bool, int, frozenset[str]]
+    ] = []
+    for citation, key, tokens, joined, head_terms, document, page_number in raw_documents:
+        ranges = section_ranges.get(document, {})
+        sections = frozenset(
+            item
+            for item, (start, end) in ranges.items()
+            if page_number is not None and start <= page_number <= end
+        )
         documents.append(
             (
-                entry.citation,
+                citation,
                 key,
                 Counter(tokens),
                 len(tokens),
-                " " + " ".join(tokens) + " ",
+                joined,
                 head_terms,
                 document,
+                sum(1 for token in tokens if token.isdigit()) / len(tokens),
+                any(title in joined for title in _STATEMENT_TITLES),
+                joined.count(" item "),
+                sections,
             )
         )
     return _PDFPageIndex(documents)
-
 
 async def _page_index(memory: Any) -> _PDFPageIndex:
     cached = _INDEX_CACHE.get(id(memory))
@@ -517,7 +722,8 @@ async def search_pdf_pages(
         raise ValueError("limit must be at least 1")
     index = await _page_index(memory)
     if index:
-        return tuple(index.search(question, limit))
+        ranked = index.search(question, limit)
+        return tuple(citation for _score, citation in ranked)
     return await _search_via_fts(memory, question, limit)
 
 
