@@ -38,3 +38,14 @@ Use one fixed `user_id` for the sequence. A new `user_id` starts a clean PowerCo
 - The bridge logs one `/api/recall`, one `/api/remember`, and the later recall.
 - PowerContext `/v1/context/prepare` returns saved memory on the second turn.
 - No secret or credential is embedded in the DSL or repository.
+
+## 5. Real Dify instance run (captured)
+
+`real-dify/` holds screenshots, the raw chat transcript and the bridge log from an actual Dify 1.18.0 deployment. See `real-dify/real-run.md` for the exact steps, versions and settings (`SSRF_PROXY_ALLOW_PRIVATE_IPS`, `POWERCONTEXT_BRIDGE_URL`, model provider registration).
+
+Key files:
+
+- `real-dify/01-workflow-canvas.png` - published chatflow with the recall and remember HTTP nodes.
+- `real-dify/02-webapp-chat.png` - two-turn Web App conversation; turn 2 shows the PowerContext casebook entry.
+- `real-dify/chat-transcript.json` - raw `/v1/chat-messages` responses.
+- `real-dify/bridge-log.txt` - recall/remember calls per turn, all HTTP 200.

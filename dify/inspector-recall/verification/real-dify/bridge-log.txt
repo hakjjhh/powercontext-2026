@@ -1,0 +1,12 @@
+# Bridge access log captured during the verified Dify run (2026-10-30)
+# Each conversation turn produces one recall and one remember call.
+bridge: "POST /api/recall HTTP/1.1" 200 -
+bridge: "POST /api/remember HTTP/1.1" 200 -
+bridge: "POST /api/recall HTTP/1.1" 200 -
+bridge: "POST /api/remember HTTP/1.1" 200 -
+
+# GET /health during setup
+bridge: "GET /health HTTP/1.1" 200 -
+
+# PowerContext /health/ready at capture time:
+# {"status":"ready","checks":{"runtime":"ready","database":"ready",...}}

@@ -63,6 +63,48 @@ curl http://127.0.0.1:8787/health
 
 5. In Dify, import `inspector-recall.yml`, configure a chat model, and set `POWERCONTEXT_BRIDGE_URL` and `POWERCONTEXT_BRIDGE_TOKEN`. For Dify Cloud, publish the bridge through HTTPS or a secure tunnel.
 
+## Verified on a real Dify instance
+
+This flow was imported into and executed by a deployed **Dify 1.18.0** instance (PostgreSQL + pgvector, official compose), with a real PowerContext 1.2.0 server behind the bridge.
+
+| Evidence | File |
+| --- | --- |
+| Published chatflow canvas | [`verification/real-dify/01-workflow-canvas.png`](verification/real-dify/01-workflow-canvas.png) |
+| Web App conversation (two turns) | [`verification/real-dify/02-webapp-chat.png`](verification/real-dify/02-webapp-chat.png) |
+| Dify run log (SUCCESS) | [`verification/real-dify/03-dify-logs.png`](verification/real-dify/03-dify-logs.png) |
+| Conversation detail with casebook | [`verification/real-dify/04-conversation-detail.png`](verification/real-dify/04-conversation-detail.png) |
+| Raw `/v1/chat-messages` responses | [`verification/real-dify/chat-transcript.json`](verification/real-dify/chat-transcript.json) |
+| Bridge request log | [`verification/real-dify/bridge-log.txt`](verification/real-dify/bridge-log.txt) |
+| Full reproduction notes | [`verification/real-dify/real-run.md`](verification/real-dify/real-run.md) |
+
+In the verified run, turn 1 records a promise and turn 2 denies it; the second reply opens with the casebook entry that PowerContext returned:
+
+```text
+user: Honestly, I never promised you anything about a compass.
+npc:  Casebook from PowerContext:
+      - [observation] Player testimony: I promise to return the golden compass to you before midnight.
+      Inspector Recall: ...
+```
+
+Two settings are required when Dify and the bridge share a host:
+
+```text
+# Dify .env
+SSRF_PROXY_ALLOW_PRIVATE_IPS=172.18.0.0/16,172.17.0.0/16
+
+# App environment variables
+POWERCONTEXT_BRIDGE_URL=http://172.18.0.1:8787
+```
+
+### Recall fallback chain
+
+`bridge/server.py` resolves a turn's casebook in three steps, so it also works on a model-free PowerContext server:
+
+1. `POST /v1/context/prepare` - bounded prepared context (used when embeddings are configured).
+2. `POST /v1/memory/search` - PowerContext full-text memory search.
+3. `POST /v1/memory/entries/list` - latest committed memory entries for the scope.
+
+
 ## Model provider
 
 The DSL uses `langgenius/openai_api_compatible/openai_api_compatible` with `gpt-4o-mini` as an example. After import, select any installed chat model and keep the prompt unchanged. The model is replaceable; the PowerContext memory behavior is not.

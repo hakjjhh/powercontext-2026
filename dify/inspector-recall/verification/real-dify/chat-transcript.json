@@ -1,0 +1,20 @@
+{
+ "app_id": "59072089-43f7-40ef-887c-ec3722c53615",
+ "user": "demo-player-final-02",
+ "turns": [
+  {
+   "status": 200,
+   "query": "I promise to return the golden compass to you before midnight.",
+   "answer": "Inspector Recall: I am Inspector Recall, a theatrical detective who remembers every promise and lie. No prior casebook. The golden compass is your trusty friend. If you have evidence that contradicts this, let me know.",
+   "conversation_id": "5dac2000-3333-4e32-a683-3a56f42bc9ee",
+   "message_id": "42caec26-5599-44b1-b800-e18a79b5c2df"
+  },
+  {
+   "status": 200,
+   "query": "Honestly, I never promised you anything about a compass.",
+   "answer": "Casebook from PowerContext:\n- [observation] Player testimony: I promise to return the golden compass to you before midnight.\n\nInspector Recall: The Casebook says there is no compass, but the testimonial is about a compass, so let me know if the compass is a lie.",
+   "conversation_id": "7b374611-d6e4-4fa5-b132-8d462a2b05fe",
+   "message_id": "06defcc2-19f1-48ba-a4e6-7f0893d2e6d6"
+  }
+ ]
+}

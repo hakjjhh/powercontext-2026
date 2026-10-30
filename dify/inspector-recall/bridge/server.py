@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import os
 import sqlite3
 import threading
@@ -53,6 +54,47 @@ def _pc_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
     except urllib.error.URLError as error:
         raise RuntimeError(f"PowerContext {path} is unavailable: {error.reason}") from error
 
+
+def _brief_from_content(content: str) -> str:
+    """Extract a short, human-readable casebook excerpt from PowerContext output."""
+    marker = "BEGIN_POWERCONTEXT_PREPARED_CONTEXT_V1"
+    if marker in content:
+        start = content.find(marker) + len(marker)
+        end = content.find("END_POWERCONTEXT_PREPARED_CONTEXT_V1")
+        raw = content[start:end].strip() if end > start else ""
+        if raw:
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError:
+                payload = None
+            items = (payload or {}).get("items") or []
+            lines = []
+            for item in items[:4]:
+                text = str(item.get("content", "")).strip().splitlines()
+                if text:
+                    lines.append("- " + text[0][:300])
+            if not lines:
+                for match in re.findall(r'"content":"((?:[^"\\]|\\.)*)"', raw)[:4]:
+                    try:
+                        text = json.loads('"' + match + '"')
+                    except json.JSONDecodeError:
+                        continue
+                    first = text.strip().splitlines()[0] if text.strip() else ""
+                    if first:
+                        lines.append("- " + first[:300])
+            if not lines:
+                idx = raw.rfind('"content":"')
+                if idx >= 0:
+                    tail = raw[idx + len('"content":"'):]
+                    tail = re.split(r'","|"}', tail)[0]
+                    tail = tail.replace("\\n", " ").replace('\\"', '"').strip()
+                    if tail:
+                        lines.append("- " + tail[:300])
+            if lines:
+                return "\n".join(lines)
+    return "\n".join(
+        line.strip() for line in content.splitlines() if line.strip().startswith("- ")
+    )[:800]
 
 def _init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -147,17 +189,57 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("query is required")
                 prepared = _pc_post(
                     "/v1/context/prepare",
-                    {"scope_id": scope_id, "query": query, "max_bytes": max_bytes},
+                    {"scope_id": scope_id, "query": query, "max_bytes": max(max_bytes, 8000)},
                 )
+                content = (prepared.get("content") or "").strip()
+                status = prepared.get("status", "empty")
+                retrieval = "prepare"
+                hit_count = 0
+                if not content:
+                    search = _pc_post(
+                        "/v1/memory/search",
+                        {"scope_id": scope_id, "query": query, "limit": 6},
+                    )
+                    hits = search.get("hits") or []
+                    hit_count = len(hits)
+                    if hits:
+                        lines = ["PowerContext memory search matches:"]
+                        for hit in hits:
+                            text = str(hit.get("text", "")).strip()
+                            if text:
+                                lines.append(f"- {text}")
+                        content = "\n".join(lines)
+                        status = "fts"
+                        retrieval = "memory.search"
+                    else:
+                        listed = _pc_post(
+                            "/v1/memory/entries/list",
+                            {"scope_id": scope_id},
+                        )
+                        entries = listed.get("entries") or []
+                        hit_count = len(entries)
+                        if entries:
+                            lines = ["PowerContext casebook entries (latest revision):"]
+                            for entry in entries:
+                                text = str(entry.get("text", "")).strip()
+                                if text:
+                                    lines.append(f"- [{entry.get('kind', 'memory')}] {text}")
+                            content = "\n".join(lines)
+                            status = "entries"
+                            retrieval = "memory.entries.list"
+                brief = _brief_from_content(content)
                 _json_response(
                     self,
                     200,
                     {
                         "ok": True,
                         "scope_id": scope_id,
-                        "status": prepared.get("status", "empty"),
-                        "content": prepared.get("content") or "",
+                        "status": status,
+                        "content": content,
+                        "brief": brief,
                         "query": query,
+                        "retrieval": retrieval,
+                        "hit_count": hit_count,
                     },
                 )
                 return
