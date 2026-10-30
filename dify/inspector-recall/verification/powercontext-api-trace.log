@@ -1,0 +1,19 @@
+Inspector Recall integration trace (offline deterministic replay)
+================================================================
+GET /health/ready -> 200
+GET /health -> 200
+POST /v1/scopes -> 201 scope_id=scp_f3979312dad4489
+POST /v1/context/prepare query="What did I promise?" -> 200 status=empty
+POST /v1/memory/remember text="The player promised to return the golden compass before midnight." -> 200
+POST /v1/context/prepare query="What did I promise?" -> 200 status=ready content="The player promised to return the golden compass before midnight."
+
+Assertions:
+- stable session-to-scope mapping: PASS
+- memory written after the first turn: PASS
+- memory recalled before the second turn: PASS
+- bounded historical context status transitions empty -> ready: PASS
+
+Production contract:
+POST /v1/scopes
+POST /v1/context/prepare
+POST /v1/memory/remember

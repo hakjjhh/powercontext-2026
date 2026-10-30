@@ -1,0 +1,13 @@
+{
+  "scope_id": "scp_59f75karhmp7n0ays8s5yq2k2n",
+  "first_hit_count": 0,
+  "second_hit_count": 1,
+  "second_texts": [
+    "The player promised to return the golden compass before midnight."
+  ],
+  "assertions": {
+    "scope_created": true,
+    "memory_written": true,
+    "recall_uses_real_powercontext": true
+  }
+}

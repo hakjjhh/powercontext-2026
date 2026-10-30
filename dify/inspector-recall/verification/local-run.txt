@@ -1,0 +1,32 @@
+Mock PowerContext listening on http://127.0.0.1:18000
+Inspector Recall bridge listening on http://0.0.0.0:18787
+mock-powercontext: "GET /health/ready HTTP/1.1" 200 -
+mock-powercontext: "GET /health/ready HTTP/1.1" 200 -
+bridge: "GET /health HTTP/1.1" 200 -
+mock-powercontext: "POST /v1/context/prepare HTTP/1.1" 200 -
+bridge: "POST /api/recall HTTP/1.1" 200 -
+mock-powercontext: "POST /v1/memory/remember HTTP/1.1" 200 -
+bridge: "POST /api/remember HTTP/1.1" 200 -
+mock-powercontext: "POST /v1/context/prepare HTTP/1.1" 200 -
+bridge: "POST /api/recall HTTP/1.1" 200 -
+{
+  "first_recall": {
+    "ok": true,
+    "scope_id": "scp_f3979312dad4489",
+    "status": "empty",
+    "content": "",
+    "query": "What did I promise?"
+  },
+  "second_recall": {
+    "ok": true,
+    "scope_id": "scp_f3979312dad4489",
+    "status": "ready",
+    "content": "The player promised to return the golden compass before midnight.",
+    "query": "What did I promise?"
+  },
+  "assertions": {
+    "scope_is_stable": true,
+    "memory_is_recalled": true,
+    "status_is_ready": true
+  }
+}

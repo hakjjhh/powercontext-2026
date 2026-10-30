@@ -1,0 +1,17 @@
+services:
+  inspector-recall-bridge:
+    build:
+      context: .
+      dockerfile: bridge/Dockerfile
+    environment:
+      POWERCONTEXT_URL: ${POWERCONTEXT_URL:-http://host.docker.internal:8000}
+      POWERCONTEXT_TOKEN: ${POWERCONTEXT_TOKEN:-}
+      BRIDGE_TOKEN: ${BRIDGE_TOKEN:-}
+      BRIDGE_DB_PATH: /data/scopes.sqlite3
+      BRIDGE_PORT: "8787"
+    ports:
+      - "8787:8787"
+    volumes:
+      - bridge-state:/data
+volumes:
+  bridge-state:
