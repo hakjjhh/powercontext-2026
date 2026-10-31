@@ -36,12 +36,29 @@ npm start            # http://127.0.0.1:8787
 
 浏览器打开 `http://<host>:8787`，按页面三步操作：加载模型 → 导入语料 → 搜索。
 
+### 模型文件（本地优先）
+
+页面默认从 `web/models/Xenova/all-MiniLM-L6-v2/` 读取模型，仓库里**不提交**
+约 115 MB 的 ONNX 权重，按下面命令拉取即可：
+
+```bash
+D=web/models/Xenova/all-MiniLM-L6-v2
+mkdir -p "$D/onnx"
+B=https://hf-mirror.com/Xenova/all-MiniLM-L6-v2/resolve/main
+for f in config.json tokenizer.json tokenizer_config.json; do curl -fL "$B/$f" -o "$D/$f"; done
+curl -fL "$B/onnx/model_quantized.onnx" -o "$D/onnx/model_quantized.onnx"   # INT8，约 22 MB
+curl -fL "$B/onnx/model.onnx"           -o "$D/onnx/model.onnx"             # FP32，约 86 MB
+```
+
+也可以直接走远端：`http://<host>:8787/?remote=1&mirror=1`（hf-mirror 需允许 CORS，
+部分网络下会被浏览器拦截，因此推荐本地文件）。
+
 ## 目录
 
 ```
 stepfun/
   server/       Express + seekdb-js（建集合、写入、混合检索 SQL）
-  web/          Transformers.js 端侧向量化 + UI
+  web/          Transformers.js（vendor 到 web/vendor）+ 端侧向量化 + UI
   README.md
   TECH_NOTE.md  一页技术说明（模型/量化/后端/seekdb/性能）
 ```

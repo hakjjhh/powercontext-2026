@@ -1,9 +1,22 @@
 // Browser-side embedding with Transformers.js. No inference request ever
 // leaves the machine: only the resulting float vectors are sent to seekdb.
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm';
+// The library is vendored under web/vendor so the demo works without a CDN.
+import { pipeline, env } from './vendor/transformers.min.js';
 
-env.allowLocalModels = false;
-env.useBrowserCache = true;
+// Model files are vendored under web/models/... so the demo runs offline.
+// Use ?remote=1 (&mirror=1) to fetch them from Hugging Face instead.
+const params = new URLSearchParams(location.search);
+const useRemote = params.get('remote') === '1';
+env.allowLocalModels = !useRemote;
+env.allowRemoteModels = useRemote;
+env.localModelPath = './models/';
+env.backends.onnx.wasm.wasmPaths = './vendor/';
+// The Cache API only exists in secure contexts; plain-http LAN access would
+// otherwise throw "Browser cache is not available in this environment".
+env.useBrowserCache = typeof caches !== 'undefined';
+// Optional mirror for networks where huggingface.co is slow: open the page
+// with ?mirror=1 to pull model files from hf-mirror.com instead.
+if (useRemote && params.get('mirror') === '1') env.remoteHost = 'https://hf-mirror.com';
 
 const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
 const DIM = 384;

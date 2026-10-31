@@ -21,8 +21,8 @@
     <section class="card">
       <h2>1. 选择推理精度</h2>
       <div class="row">
-        <label><input type="radio" name="dtype" value="fp32" checked /> FP32（基线，约 86 MiB）</label>
-        <label><input type="radio" name="dtype" value="q8" /> INT8 量化（约 22 MiB，压缩 3.9×）</label>
+        <label><input type="radio" name="dtype" value="fp32" /> FP32（基线，约 86 MiB）</label>
+        <label><input type="radio" name="dtype" value="q8" checked /> INT8 量化（约 22 MiB，压缩 3.9×）</label>
       </div>
       <p class="hint">首次加载会下载模型；WebGPU 可用时优先使用，否则自动回退 WASM 并在上方标注。</p>
       <button id="load">加载模型</button>
