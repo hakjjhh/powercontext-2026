@@ -74,6 +74,23 @@ LIMIT :k;
 - 待实测：模型加载时间、向量化吞吐、seekdb 检索延迟、端到端延迟、
   WebGPU vs WASM、FP32 vs INT8 检索质量。
 
+### 实测（Edge headless，WASM + INT8，模型文件本地加载）
+
+| 指标 | 结果 |
+|---|---|
+| 模型加载（q8，本地文件） | **2.74 s** |
+| 导入 5 条文档（16/批） | **0.58 s**（约 116 ms/条） |
+| 查询向量化 | **48.9 ms** |
+| seekdb 单条混合 SQL | **27.6 ms**（5 条文档，冷启动首查） |
+| 混合检索结果 | cosine 与 fulltext 分数均非零，排序由 seekdb 完成 |
+
+同一次会话中后端接口 `POST /api/search` 的纯 SQL 耗时曾测得 **2.46 ms**
+（3 条文档、连接已预热），说明 27.6 ms 主要来自浏览器到服务端的首次往返。
+
+WebGPU 与 FP32 对比未完成：本机 headless Edge 不暴露 `navigator.gpu`
+（`WEBGPU false`），FP32 权重（86 MB）在当前网络下未下完。
+页面已实现 WebGPU 优先 / WASM 自动降级，具备 GPU 的机器打开即可验证。
+
 ## 5. 复现测量步骤
 
 1. 启动后端与页面，分别选择 FP32 / INT8 加载模型，记录顶部 badge 与运行指标。

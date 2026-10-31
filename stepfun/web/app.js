@@ -10,7 +10,8 @@ const useRemote = params.get('remote') === '1';
 env.allowLocalModels = !useRemote;
 env.allowRemoteModels = useRemote;
 env.localModelPath = './models/';
-env.backends.onnx.wasm.wasmPaths = './vendor/';
+// Absolute URL so ONNX Runtime resolves the wasm next to the vendored bundle.
+env.backends.onnx.wasm.wasmPaths = new URL('./vendor/', location.href).href;
 // The Cache API only exists in secure contexts; plain-http LAN access would
 // otherwise throw "Browser cache is not available in this environment".
 env.useBrowserCache = typeof caches !== 'undefined';
