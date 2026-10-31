@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StepFun · 端侧向量化 + seekdb 混合检索</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header>
+    <h1>端侧迷你知识库</h1>
+    <p class="sub">浏览器本地 embedding（Transformers.js）+ seekdb 全文/向量混合检索</p>
+    <div class="badges">
+      <span id="backend" class="badge badge-wait">后端：加载中…</span>
+      <span id="model" class="badge">模型：all-MiniLM-L6-v2</span>
+      <span id="docs" class="badge">文档：0</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1. 选择推理精度</h2>
+      <div class="row">
+        <label><input type="radio" name="dtype" value="fp32" checked /> FP32（基线，约 86 MiB）</label>
+        <label><input type="radio" name="dtype" value="q8" /> INT8 量化（约 22 MiB，压缩 3.9×）</label>
+      </div>
+      <p class="hint">首次加载会下载模型；WebGPU 可用时优先使用，否则自动回退 WASM 并在上方标注。</p>
+      <button id="load">加载模型</button>
+      <span id="loadStatus" class="status"></span>
+    </section>
+
+    <section class="card">
+      <h2>2. 导入语料</h2>
+      <p class="hint">每行一条文档；可选 <code>标题 :: 正文</code> 格式。</p>
+      <textarea id="corpus" rows="6">OceanBase 是一款原生分布式关系数据库，支持高并发与强一致。
+seekdb 提供向量检索与全文检索能力，适合构建 AI 应用。
+杭州西湖是中国著名的风景名胜区，适合步行游览。
+手冲咖啡的关键是水温、研磨度和注水节奏。
+PowerContext 用于保存 Agent 的记忆与任务上下文。</textarea>
+      <div class="row">
+        <button id="import">向量化并写入 seekdb</button>
+        <button id="reset" class="ghost">清空知识库</button>
+        <span id="importStatus" class="status"></span>
+      </div>
+      <div class="progress"><div id="bar"></div></div>
+    </section>
+
+    <section class="card">
+      <h2>3. 混合检索</h2>
+      <div class="row">
+        <input id="query" placeholder="例如：想找一个能做向量检索的数据库" />
+        <button id="search">搜索</button>
+      </div>
+      <p id="searchStatus" class="status"></p>
+      <ol id="results"></ol>
+    </section>
+
+    <section class="card">
+      <h2>运行指标</h2>
+      <pre id="metrics">等待操作…</pre>
+    </section>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

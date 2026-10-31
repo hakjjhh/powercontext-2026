@@ -1,0 +1,29 @@
+:root { color-scheme: light; --line: #e3e8ef; --ink: #1f2937; --accent: #2563eb; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; color: var(--ink); background: #f7f9fc; }
+header { padding: 28px 6vw 12px; }
+h1 { margin: 0 0 4px; font-size: 26px; }
+.sub { margin: 0 0 12px; color: #6b7280; }
+.badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.badge { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 3px 10px; font-size: 13px; }
+.badge-gpu { border-color: #86efac; background: #f0fdf4; }
+.badge-wasm { border-color: #93c5fd; background: #eff6ff; }
+.badge-wait { color: #9ca3af; }
+main { display: grid; gap: 16px; padding: 12px 6vw 48px; max-width: 1080px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+h2 { margin: 0 0 10px; font-size: 17px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+textarea, input[type=text], #query { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; }
+#query { flex: 1 1 420px; width: auto; }
+button { border: 0; border-radius: 8px; background: var(--accent); color: #fff; padding: 9px 16px; font: inherit; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+button.ghost { background: #fff; color: #b91c1c; border: 1px solid #fecaca; }
+.hint { color: #6b7280; font-size: 13px; margin: 4px 0; }
+.status { color: #374151; font-size: 13px; }
+.progress { height: 6px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
+#bar { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+ol { padding-left: 20px; }
+li { margin: 10px 0; }
+.doc { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.meta { color: #6b7280; font-size: 12px; margin-top: 4px; font-family: ui-monospace, Consolas, monospace; }
+pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow: auto; font-size: 12px; }
