@@ -1,0 +1,50 @@
+[
+  {
+    "citation": {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 3
+      },
+      "entry_id": "mem_ent_8f2ec24fd64b4d13bb700042fa46411b",
+      "entry_version_id": "mem_ver_0fc03d0c5cdf497ca6f2a2d31ec89230"
+    },
+    "text": "SDD task: add tag filter to list_bookmarks, status in_progress",
+    "score": 0.01639344262295082,
+    "matched_by": [
+      "fts"
+    ]
+  },
+  {
+    "citation": {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 3
+      },
+      "entry_id": "mem_ent_a249ce52594041dda71626a6499d73f1",
+      "entry_version_id": "mem_ver_a40a91e0e0e34f319b38537d8122a84f"
+    },
+    "text": "{\"task\": \"list_bookmarks tag 过滤 task state\", \"status\": \"in_progress\", \"selected\": {\"specs\": [\"spec/bookmarks.md\"], \"code\": [\"src/bookmarks.py\"], \"tests\": [\"tests/test_bookmarks.py\"]}}",
+    "score": 0.016129032258064516,
+    "matched_by": [
+      "fts"
+    ]
+  },
+  {
+    "citation": {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 3
+      },
+      "entry_id": "mem_ent_8e15b1dcb5854ffa9d02eb1bf2890013",
+      "entry_version_id": "mem_ver_73aac75122b04bba88c7cb1c49d57f1d"
+    },
+    "text": "{\"task\": \"为 list_bookmarks 增加按 tag 过滤（不区分大小写），未知标签返回空列表，保持原有返回字段与排序\", \"status\": \"in_progress\", \"selected\": {\"specs\": [\"spec/bookmarks.md\"], \"code\": [\"src/bookmarks.py\"], \"tests\": [\"tests/test_bookmarks.py\"]}}",
+    "score": 0.015873015873015872,
+    "matched_by": [
+      "fts"
+    ]
+  }
+]

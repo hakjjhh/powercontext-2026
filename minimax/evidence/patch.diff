@@ -1,0 +1,20 @@
+diff --git a/src/bookmarks.py b/src/bookmarks.py
+--- a/src/bookmarks.py
++++ b/src/bookmarks.py
+@@ -35,6 +35,16 @@ def list_bookmarks(tag=None, limit=10):
+     if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:
+         raise ValueError("limit must be a positive integer")
+     selected = list(reversed(_ITEMS))
++    if tag:
++        normalized_tag = str(tag).strip().casefold()
++        selected = [
++            item
++            for item in selected
++            if any(
++                str(item_tag).casefold() == normalized_tag
++                for item_tag in item["tags"]
++            )
++        ]
+     return [
+         {
+             "id": item["id"],

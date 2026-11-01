@@ -1,0 +1,27 @@
+{
+  "task": "为 list_bookmarks 增加按 tag 过滤（不区分大小写），未知标签返回空列表，保持原有返回字段与排序",
+  "specs": [
+    {
+      "kind": "spec",
+      "path": "spec/bookmarks.md",
+      "content": "# Bookmarks 服务规格\n\n## 数据结构\n\n每条书签包含：`id`（自增整数）、`url`、`title`、`tags`（字符串列表）、`created_at`（ISO 时间）。\n\n## 接口\n\n### `add_bookmark(url, title, tags=None) -> int`\n\n- `url` 必填且不能为空串。\n- `tags` 去重、去首尾空格，保留原大小写。\n- 返回新书签的 `id`。\n\n### `list_bookmarks(tag=None, limit=10) -> list[dict]`\n\n- 返回按 `created_at` 倒序（最新在前）的书签列表。\n- `tag` 为空时返回全部；**非空时只返回 tags 中包含该标签的书签，匹配不区分大小写**。\n- `limit` 必须是正整数，默认 10；超过时按 `limit` 截断。\n- 每条返回 `{id, url, title, tags}`，不含 `created_at`。\n\n### `delete_bookmark(bookmark_id) -> bool`\n\n- 删除成功返回 `True`，不存在返回 `False`。\n\n## 兼容性约束\n\n- 不得改变已有函数签名和返回字段。\n- `tag=None` 的行为必须与旧版本完全一致。\n- 空列表、未知标签返回空列表，不抛异常。\n",
+      "score": 1.8374591031931775
+    }
+  ],
+  "code": [
+    {
+      "kind": "code",
+      "path": "src/bookmarks.py",
+      "content": "\"\"\"Minimal bookmarks service used by the SDD context demo.\"\"\"\n\nfrom datetime import datetime, timezone\n\n_NEXT_ID = 1\n_ITEMS = []\n\n\ndef _now():\n    return datetime.now(timezone.utc).isoformat()\n\n\ndef add_bookmark(url, title, tags=None):\n    global _NEXT_ID\n    if not url:\n        raise ValueError(\"url is required\")\n    clean_tags = []\n    for tag in tags or []:\n        value = str(tag).strip()\n        if value and value not in clean_tags:\n            clean_tags.append(value)\n    item = {\n        \"id\": _NEXT_ID,\n        \"url\": url,\n        \"title\": title,\n        \"tags\": clean_tags,\n        \"created_at\": _now(),\n    }\n    _NEXT_ID += 1\n    _ITEMS.append(item)\n    return item[\"id\"]\n\n\ndef list_bookmarks(tag=None, limit=10):\n    if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:\n        raise ValueError(\"limit must be a positive integer\")\n    selected = list(reversed(_ITEMS))\n    return [\n        {\n            \"id\": item[\"id\"],\n            \"url\": item[\"url\"],\n            \"title\": item[\"title\"],\n            \"tags\": list(item[\"tags\"]),\n        }\n        for item in selected[:limit]\n    ]\n\n\ndef delete_bookmark(bookmark_id):\n    for index, item in enumerate(_ITEMS):\n        if item[\"id\"] == bookmark_id:\n            del _ITEMS[index]\n            return True\n    return False\n",
+      "score": 0.13767123031015374
+    }
+  ],
+  "tests": [
+    {
+      "kind": "test",
+      "path": "tests/test_bookmarks.py",
+      "content": "import pathlib\nimport sys\n\nimport pytest\n\nROOT = pathlib.Path(__file__).resolve().parents[1]\nsys.path.insert(0, str(ROOT / \"src\"))\n\nimport bookmarks  # noqa: E402\n\n\n@pytest.fixture(autouse=True)\ndef reset_store():\n    bookmarks._ITEMS.clear()\n    bookmarks._NEXT_ID = 1\n    yield\n\n\ndef test_add_and_list_newest_first():\n    first = bookmarks.add_bookmark(\"https://a.example\", \"A\", [\"db\"])\n    second = bookmarks.add_bookmark(\"https://b.example\", \"B\", [\"ai\", \"db\"])\n    items = bookmarks.list_bookmarks()\n    assert [item[\"id\"] for item in items] == [second, first]\n    assert \"created_at\" not in items[0]\n\n\ndef test_filter_by_tag_is_case_insensitive():\n    bookmarks.add_bookmark(\"https://a.example\", \"A\", [\"Database\"])\n    bookmarks.add_bookmark(\"https://b.example\", \"B\", [\"AI\"])\n    items = bookmarks.list_bookmarks(tag=\"database\")\n    assert [item[\"title\"] for item in items] == [\"A\"]\n\n\ndef test_unknown_tag_returns_empty_list():\n    bookmarks.add_bookmark(\"https://a.example\", \"A\", [\"db\"])\n    assert bookmarks.list_bookmarks(tag=\"missing\") == []\n\n\ndef test_limit_and_invalid_limit():\n    for index in range(3):\n        bookmarks.add_bookmark(f\"https://{index}.example\", str(index), [\"db\"])\n    assert len(bookmarks.list_bookmarks(limit=2)) == 2\n    with pytest.raises(ValueError):\n        bookmarks.list_bookmarks(limit=0)\n\n\ndef test_delete_bookmark():\n    bookmark_id = bookmarks.add_bookmark(\"https://a.example\", \"A\", [\"db\"])\n    assert bookmarks.delete_bookmark(bookmark_id) is True\n    assert bookmarks.delete_bookmark(bookmark_id) is False\n",
+      "score": 0.07208387942332897
+    }
+  ]
+}

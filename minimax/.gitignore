@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+.powercontext_scope
+.env

@@ -1,0 +1,31 @@
+.FF..                                                                    [100%]
+=================================== FAILURES ===================================
+____________________ test_filter_by_tag_is_case_insensitive ____________________
+
+    def test_filter_by_tag_is_case_insensitive():
+        bookmarks.add_bookmark("https://a.example", "A", ["Database"])
+        bookmarks.add_bookmark("https://b.example", "B", ["AI"])
+        items = bookmarks.list_bookmarks(tag="database")
+>       assert [item["title"] for item in items] == ["A"]
+E       AssertionError: assert ['B', 'A'] == ['A']
+E         
+E         At index 0 diff: 'B' != 'A'
+E         Left contains one more item: 'A'
+E         Use -v to get more diff
+
+tests/test_bookmarks.py:31: AssertionError
+_____________________ test_unknown_tag_returns_empty_list ______________________
+
+    def test_unknown_tag_returns_empty_list():
+        bookmarks.add_bookmark("https://a.example", "A", ["db"])
+>       assert bookmarks.list_bookmarks(tag="missing") == []
+E       AssertionError: assert [{'id': 1, 'u...ags': ['db']}] == []
+E         
+E         Left contains one more item: {'id': 1, 'url': 'https://a.example', 'title': 'A', 'tags': ['db']}
+E         Use -v to get more diff
+
+tests/test_bookmarks.py:36: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_bookmarks.py::test_filter_by_tag_is_case_insensitive - Asse...
+FAILED tests/test_bookmarks.py::test_unknown_tag_returns_empty_list - Asserti...
+2 failed, 3 passed in 0.02s
