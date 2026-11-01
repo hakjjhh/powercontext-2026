@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PaperLens · 论文速查（seekdb 全文+向量混合检索）</title>
+<style>
+  :root{--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--green:#16a34a}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:var(--ink);background:#f8fafc}
+  .hero{padding:72px 24px 56px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9 60%,#22d3ee);color:#fff}
+  .wrap{max-width:1000px;margin:0 auto}
+  .hero h1{margin:0 0 12px;font-size:44px;letter-spacing:-1px}
+  .hero p{margin:0;font-size:18px;opacity:.92;max-width:720px}
+  .tag{display:inline-block;margin-bottom:18px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.18);font-size:13px}
+  main{max-width:1000px;margin:0 auto;padding:48px 24px 72px}
+  h2{font-size:26px;margin:48px 0 14px}
+  h2:first-child{margin-top:0}
+  p{color:#334155}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+  .card h3{margin:0 0 8px;font-size:17px}
+  .card p{margin:0;font-size:14px;color:var(--muted)}
+  .shot{width:100%;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(15,23,42,.08);margin-top:14px;background:#fff}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:14px;padding:18px;overflow:auto;font-size:13px;line-height:1.6}
+  code{font-family:ui-monospace,Consolas,monospace}
+  .kv{display:grid;grid-template-columns:160px 1fr;gap:8px 16px;margin-top:12px;font-size:14px}
+  .kv div:nth-child(odd){color:var(--muted)}
+  a{color:var(--accent)}
+  .cta{display:inline-block;margin-top:10px;padding:10px 18px;border-radius:10px;background:var(--accent);color:#fff;text-decoration:none}
+  footer{border-top:1px solid var(--line);padding:24px;text-align:center;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="wrap">
+    <span class="tag">Qoder × OceanBase 2026 数据库大赛 · Qoder 赛道</span>
+    <h1>PaperLens 论文速查</h1>
+    <p>把论文和笔记导入 seekdb，用一条 SQL 同时做全文与向量混合检索，几秒内找到最相关的那一段。</p>
+  </div>
+</div>
+
+<main>
+  <h2>解决的问题</h2>
+  <p>整理文献时，关键词搜不到语义相近的表述，语义检索又会漏掉精确术语。PaperLens 把两种召回放进同一条 SQL：
+  全文得分（<code>MATCH ... AGAINST</code>）与向量距离（<code>COSINE_DISTANCE</code>）加权成一个 relevance，
+  在 seekdb 内完成排序，返回结果同时给出三个分数，便于判断命中原因。</p>
+
+  <div class="grid">
+    <div class="card"><h3>全文 + 向量混合检索</h3><p>一条 SQL 同时计算 text_score、vec_distance 与 combined relevance，数据库侧排序。</p></div>
+    <div class="card"><h3>导入即可检索</h3><p>支持批量导入论文标题、作者、摘要，写入后立即可被混合检索命中。</p></div>
+    <div class="card"><h3>分数可解释</h3><p>每条结果展示 relevance / text / vec_dist，方便调权重与排查召回。</p></div>
+  </div>
+
+  <h2>真实运行截图</h2>
+  <img class="shot" src="assets/paperlens-home.png" alt="PaperLens 首页" />
+  <img class="shot" src="assets/paperlens-search.png" alt="PaperLens 混合检索结果" />
+
+  <h2>核心实现</h2>
+  <pre><code>SELECT id, title, authors, abstract,
+       MATCH(title, abstract) AGAINST (?)            AS text_score,
+       COSINE_DISTANCE(embedding, ?)                 AS vec_distance,
+       0.4 * MATCH(title, abstract) AGAINST (?)
+     + 0.6 * (1 - COSINE_DISTANCE(embedding, ?))      AS relevance
+FROM documents
+ORDER BY relevance DESC
+LIMIT ?;</code></pre>
+
+  <div class="kv">
+    <div>数据库</div><div>seekdb（MySQL 协议，向量 + 全文索引）</div>
+    <div>后端</div><div>Node.js 20 + Express</div>
+    <div>接入方式</div><div>seekdb-js 1.3.0，<code>client.execute()</code> 直接执行混合 SQL</div>
+    <div>索引</div><div>FULLTEXT(title, abstract) WITH PARSER ik + VECTOR(384) 余弦距离</div>
+    <div>验证</div><div>10 篇样例数据，冒烟测试 4/4 通过，Top-1 relevance 0.4951</div>
+  </div>
+
+  <h2>本地运行</h2>
+  <pre><code>docker run -d --name seekdb -p 10000:10000 oceanbase/seekdb:latest -p 10000
+cd paperlens
+npm install
+npm run init-db
+npm run seed
+npm start        # http://localhost:3789
+npm run smoke-test</code></pre>
+
+  <h2>代码与证据</h2>
+  <p>完整源码、样例数据、冒烟测试与运行说明都在仓库中：</p>
+  <a class="cta" href="https://github.com/hakjjhh/powercontext-2026/tree/2026-competition-ecosystem/qoder/paperlens">查看代码仓库</a>
+</main>
+
+<footer>PaperLens · Built with Qoder（Qwen3.8-Flash）· seekdb hybrid search</footer>
+</body>
+</html>

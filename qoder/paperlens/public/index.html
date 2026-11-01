@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaperLens 论文速查</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    header { text-align: center; margin-bottom: 32px; }
+    header h1 { font-size: 1.8rem; color: #2563eb; }
+    header p { color: #666; margin-top: 4px; font-size: 0.9rem; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; }
+    .tab-btn { padding: 10px 24px; border: none; background: none; cursor: pointer; font-size: 0.95rem; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; }
+    .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Search */
+    .search-box { display: flex; gap: 8px; margin-bottom: 20px; }
+    .search-box input { flex: 1; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
+    .search-box button { padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+    .search-box button:hover { background: #1d4ed8; }
+
+    /* Results */
+    .result-card { background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .result-card h3 { font-size: 1.05rem; color: #1e293b; margin-bottom: 6px; }
+    .result-card .meta { font-size: 0.82rem; color: #64748b; margin-bottom: 8px; }
+    .result-card .snippet { font-size: 0.9rem; color: #475569; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .scores { display: flex; gap: 12px; flex-wrap: wrap; }
+    .score-badge { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; background: #eff6ff; color: #2563eb; }
+    .score-badge.relevance { background: #f0fdf4; color: #16a34a; font-weight: 600; }
+
+    /* Import form */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 4px; color: #374151; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; }
+    .form-group textarea { min-height: 120px; resize: vertical; }
+    .btn-primary { padding: 10px 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .status-msg { margin-top: 12px; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; }
+    .status-msg.ok { background: #f0fdf4; color: #16a34a; }
+    .status-msg.err { background: #fef2f2; color: #dc2626; }
+
+    .empty-state { text-align: center; padding: 40px; color: #94a3b8; }
+    #loading { display: none; text-align: center; padding: 20px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PaperLens 论文速查</h1>
+      <p>全文 + 向量混合检索 · seekdb powered</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="search">搜索</button>
+      <button class="tab-btn" data-tab="import">导入文档</button>
+    </div>
+
+    <!-- 搜索面板 -->
+    <div class="tab-panel active" id="panel-search">
+      <div class="search-box">
+        <input type="text" id="q" placeholder="输入自然语言查询，如：transformer attention mechanism" />
+        <button onclick="doSearch()">搜索</button>
+      </div>
+      <div id="loading">搜索中...</div>
+      <div id="results"></div>
+    </div>
+
+    <!-- 导入面板 -->
+    <div class="tab-panel" id="panel-import">
+      <div class="form-group">
+        <label>标题 *</label>
+        <input type="text" id="imp-title" placeholder="论文标题" />
+      </div>
+      <div class="form-group">
+        <label>作者</label>
+        <input type="text" id="imp-authors" placeholder="Vaswani et al." />
+      </div>
+      <div class="form-group">
+        <label>年份</label>
+        <input type="number" id="imp-year" placeholder="2023" min="1900" max="2099" />
+      </div>
+      <div class="form-group">
+        <label>内容 / 摘要 *</label>
+        <textarea id="imp-content" placeholder="粘贴论文摘要或全文..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="doImport()">导入文档</button>
+      <div id="import-status"></div>
+    </div>
+  </div>
+
+  <script>
+    // Tab 切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 搜索
+    async function doSearch() {
+      const q = document.getElementById('q').value.trim();
+      if (!q) return;
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('results').innerHTML = '';
+      try {
+        const resp = await fetch('/api/search?q=' + encodeURIComponent(q));
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || '搜索失败');
+        renderResults(data);
+      } catch (e) {
+        document.getElementById('results').innerHTML = `<div class="empty-state">搜索出错: ${e.message}</div>`;
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    function renderResults(data) {
+      const el = document.getElementById('results');
+      if (!data.results || data.results.length === 0) {
+        el.innerHTML = '<div class="empty-state">未找到相关文档</div>';
+        return;
+      }
+      el.innerHTML = `<p style="margin-bottom:12px;color:#666;font-size:0.9rem;">找到 ${data.count} 条结果</p>` +
+        data.results.map(r => `
+          <div class="result-card">
+            <h3>${esc(r.title)}</h3>
+            <div class="meta">${esc(r.authors)}${r.year ? ' · ' + r.year : ''}</div>
+            <div class="snippet">${esc(r.content)}</div>
+            <div class="scores">
+              <span class="score-badge relevance">relevance: ${r.relevance.toFixed(4)}</span>
+              <span class="score-badge">text: ${r.text_score.toFixed(4)}</span>
+              <span class="score-badge">vec_dist: ${r.vec_distance.toFixed(4)}</span>
+            </div>
+          </div>
+        `).join('');
+    }
+
+    // 导入
+    async function doImport() {
+      const title = document.getElementById('imp-title').value.trim();
+      const content = document.getElementById('imp-content').value.trim();
+      const authors = document.getElementById('imp-authors').value.trim();
+      const year = document.getElementById('imp-year').value;
+      const statusEl = document.getElementById('import-status');
+
+      if (!title || !content) {
+        statusEl.innerHTML = '<div class="status-msg err">请填写标题和内容</div>';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/documents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, content, authors, year: parseInt(year) || 0 }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || '导入失败');
+        statusEl.innerHTML = `<div class="status-msg ok">导入成功！ID: ${data.id}</div>`;
+        document.getElementById('imp-title').value = '';
+        document.getElementById('imp-content').value = '';
+      } catch (e) {
+        statusEl.innerHTML = `<div class="status-msg err">导入失败: ${e.message}</div>`;
+      }
+    }
+
+    // Enter 键搜索
+    document.getElementById('q').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSearch();
+    });
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+  </script>
+</body>
+</html>
