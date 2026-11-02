@@ -1,0 +1,224 @@
+[
+  {
+    "workflow_run_id": "d8170cfe-67f6-40b3-a7a1-7d60c480b48b",
+    "status": "succeeded",
+    "created_at": 1793609038,
+    "elapsed_time": 0.29531185799987725,
+    "elapsed_ms": 295.3,
+    "total_tokens": 429,
+    "nodes": [
+      {
+        "id": "start",
+        "title": "Start",
+        "type": "start",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      },
+      {
+        "id": "prepare_request",
+        "title": "Prepare recall request",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 67.8,
+        "error": null
+      },
+      {
+        "id": "recall_memory",
+        "title": "Recall PowerContext casebook",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 48.3,
+        "error": null
+      },
+      {
+        "id": "parse_recall",
+        "title": "Parse recalled casebook",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 47.9,
+        "error": null
+      },
+      {
+        "id": "npc_llm",
+        "title": "Inspector Recall NPC",
+        "type": "llm",
+        "status": "succeeded",
+        "elapsed_ms": 12.6,
+        "error": null
+      },
+      {
+        "id": "format_memory",
+        "title": "Format durable memory",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 48.6,
+        "error": null
+      },
+      {
+        "id": "save_memory",
+        "title": "Save Inspector case note",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 31.8,
+        "error": null
+      },
+      {
+        "id": "answer",
+        "title": "Inspector reply",
+        "type": "answer",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      }
+    ]
+  },
+  {
+    "workflow_run_id": "f1b6be65-eb25-4a6c-bcce-54c4cdefc633",
+    "status": "succeeded",
+    "created_at": 1793609038,
+    "elapsed_time": 0.31987205300038113,
+    "elapsed_ms": 319.9,
+    "total_tokens": 164,
+    "nodes": [
+      {
+        "id": "start",
+        "title": "Start",
+        "type": "start",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      },
+      {
+        "id": "prepare_request",
+        "title": "Prepare recall request",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 54.5,
+        "error": null
+      },
+      {
+        "id": "recall_memory",
+        "title": "Recall PowerContext casebook",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 81.0,
+        "error": null
+      },
+      {
+        "id": "parse_recall",
+        "title": "Parse recalled casebook",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 45.6,
+        "error": null
+      },
+      {
+        "id": "npc_llm",
+        "title": "Inspector Recall NPC",
+        "type": "llm",
+        "status": "succeeded",
+        "elapsed_ms": 10.1,
+        "error": null
+      },
+      {
+        "id": "format_memory",
+        "title": "Format durable memory",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 50.1,
+        "error": null
+      },
+      {
+        "id": "save_memory",
+        "title": "Save Inspector case note",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 34.2,
+        "error": null
+      },
+      {
+        "id": "answer",
+        "title": "Inspector reply",
+        "type": "answer",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      }
+    ]
+  },
+  {
+    "workflow_run_id": "e604f8e4-e03f-48b9-a9b1-73df5d7b105c",
+    "status": "succeeded",
+    "created_at": 1793609037,
+    "elapsed_time": 0.26607925400003296,
+    "elapsed_ms": 266.1,
+    "total_tokens": 67,
+    "nodes": [
+      {
+        "id": "start",
+        "title": "Start",
+        "type": "start",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      },
+      {
+        "id": "prepare_request",
+        "title": "Prepare recall request",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 61.4,
+        "error": null
+      },
+      {
+        "id": "recall_memory",
+        "title": "Recall PowerContext casebook",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 52.1,
+        "error": null
+      },
+      {
+        "id": "parse_recall",
+        "title": "Parse recalled casebook",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 39.1,
+        "error": null
+      },
+      {
+        "id": "npc_llm",
+        "title": "Inspector Recall NPC",
+        "type": "llm",
+        "status": "succeeded",
+        "elapsed_ms": 10.5,
+        "error": null
+      },
+      {
+        "id": "format_memory",
+        "title": "Format durable memory",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 38.8,
+        "error": null
+      },
+      {
+        "id": "save_memory",
+        "title": "Save Inspector case note",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 25.6,
+        "error": null
+      },
+      {
+        "id": "answer",
+        "title": "Inspector reply",
+        "type": "answer",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      }
+    ]
+  }
+]

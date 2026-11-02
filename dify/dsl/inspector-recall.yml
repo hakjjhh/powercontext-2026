@@ -40,7 +40,7 @@ workflow:
     selector:
     - env
     - POWERCONTEXT_BRIDGE_URL
-    value: http://172.18.0.1:8787
+    value: http://bridge:8787
     value_type: string
   - description: Optional bridge bearer token
     id: 85e74a1f-4cea-49d0-9fa4-bbe2c25faf4e

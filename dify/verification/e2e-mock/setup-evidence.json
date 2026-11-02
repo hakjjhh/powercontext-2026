@@ -1,0 +1,17 @@
+{
+  "app": {
+    "id": "aa9a1830-6208-43c9-9fa8-7916b3a45510",
+    "name": "Inspector Recall (e2e 36ef7b)",
+    "mode": "advanced-chat",
+    "enable_site": true,
+    "enable_api": true,
+    "updated_at": 1793609034
+  },
+  "model": {
+    "model": "local-qwen2.5-0.5b",
+    "provider": "langgenius/openai_api_compatible/openai_api_compatible",
+    "active_credential": "API KEY 1",
+    "endpoint_url": "http://mock-llm:8099/v1"
+  },
+  "bridge_url": "http://bridge:8787"
+}

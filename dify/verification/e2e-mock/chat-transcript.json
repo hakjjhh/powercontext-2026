@@ -1,0 +1,36 @@
+{
+  "user": "e2e-mock-player",
+  "base_url": "http://127.0.0.1:8080",
+  "turns": [
+    {
+      "turn": 1,
+      "query": "I promise to return the golden compass to you before midnight.",
+      "status": 200,
+      "answer": "Inspector Recall: The casebook is empty, so this is your first testimony. I have written it down, suspect - and I will hold you to every word. Tell me, who else saw you that night?",
+      "conversation_id": "7cef3c44-7993-4cf7-9176-4d081577b11c",
+      "message_id": "1bcf56e5-9ba4-4456-8b93-4cb0a9592142",
+      "workflow_run_id": null,
+      "elapsed_ms": 368
+    },
+    {
+      "turn": 2,
+      "query": "Honestly, I never promised you anything about a compass.",
+      "status": 200,
+      "answer": "Casebook from PowerContext:\n- [observation] Player testimony: I promise to return the golden compass to you before midnight.\n\nInspector Recall: The casebook remembers you, suspect. You swore: “I promise to return the golden compass to you before midnight.” — and tonight your story changed. I have the record in front of me, so do not bother denying it. Why should I believe this new version?",
+      "conversation_id": "6f2142a2-f63c-4682-a26c-0fde13e576da",
+      "message_id": "47307528-c79b-405d-beae-3ab14286c5b4",
+      "workflow_run_id": null,
+      "elapsed_ms": 383
+    },
+    {
+      "turn": 3,
+      "query": "What did I promise you before midnight?",
+      "status": 200,
+      "answer": "Casebook from PowerContext:\n- Player testimony: I promise to return the golden compass to you before midnight.\n- Player testimony: Honestly, I never promised you anything about a compass.\n\nInspector Recall: The casebook remembers you, suspect. You swore: “I promise to return the golden compass to you before midnight.” — and tonight your story changed. I have the record in front of me, so do not bother denying it. Why should I believe this new version?",
+      "conversation_id": "6f2142a2-f63c-4682-a26c-0fde13e576da",
+      "message_id": "511c2071-d1a9-4b19-9bc7-a327b6b12f08",
+      "workflow_run_id": null,
+      "elapsed_ms": 383
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# embedded seekdb storage proof
+2026-11-02T18:43:31+08:00
+$ docker exec <powercontext> env | grep POWERCONTEXT_SERVER_DATABASE
+POWERCONTEXT_SERVER_DATABASE_KIND=seekdb
+POWERCONTEXT_SERVER_DATABASE_PATH=/data/seekdb
+
+$ ls -lR /data/seekdb (top level)
+total 16
+drwxr-xr-x 2 root root 4096 Nov  2 10:00 etc
+drwxr-xr-x 2 root root 4096 Nov  2 10:25 log
+drwxr-xr-x 2 root root 4096 Nov  2 10:23 run
+drwxr-xr-x 5 root root 4096 Nov  2 10:00 store
+
+$ du -sh /data/seekdb/*
+8.0K	/data/seekdb/etc
+385M	/data/seekdb/log
+12K	/data/seekdb/run
+257M	/data/seekdb/store
+
+# seekdb engine log head
+[2026-11-02 10:25:53.210055] INFO  New syslog file info: [observer version: OceanBase 1.4.0.0, revision: 1-bf450b4c8deb3c45d85efb1bd5f43e282d101914, sysname: Linux, os release: 6.8.0-138-generic, machine: x86_64, tz GMT offset: 00:00]
+[2026-11-02 10:25:53.210160] INFO  [STORAGE] runTimerTask (ob_checkpoint_service.cpp:147) [34][T1_TxLoopWorker_TxCkpt][Y0-0000000000000000-0-0] [lt=12] [CHECKPOINT] 

@@ -5,7 +5,7 @@
 Run:
 
 ```bash
-python dify/inspector-recall/scripts/verify_local.py
+python dify/scripts/verify_local.py
 ```
 
 Expected assertions:
@@ -39,13 +39,23 @@ Use one fixed `user_id` for the sequence. A new `user_id` starts a clean PowerCo
 - PowerContext `/v1/context/prepare` returns saved memory on the second turn.
 - No secret or credential is embedded in the DSL or repository.
 
-## 5. Real Dify instance run (captured)
+## 5. End-to-end runs (captured)
 
-`real-dify/` holds screenshots, the raw chat transcript and the bridge log from an actual Dify 1.18.0 deployment. See `real-dify/real-run.md` for the exact steps, versions and settings (`SSRF_PROXY_ALLOW_PRIVATE_IPS`, `POWERCONTEXT_BRIDGE_URL`, model provider registration).
+| 目录 | 地位 | 后端 |
+|---|---|---|
+| `e2e-seekdb/` | **主交付证据** | 交付 compose 里的 PowerContext 容器，内嵌 seekdb（`DATABASE_KIND=seekdb`） |
+| `e2e-mock/` | 辅助自检，不作交付证据 | 无 Docker 时降级为 PowerContext 内置 SQLite，只证明 Dify 调用链 |
+| `real-dify/` | 另一套真实 Dify 1.18 环境的人工截图证据 | 见 `real-dify/real-run.md` |
 
-Key files:
+`e2e-seekdb/README.md` lists every artifact and how to reproduce the run
+(`dify/scripts/start_all.sh` + `dify/scripts/demo.sh` with `DEMO_OUT_DIR=verification/e2e-seekdb`).
+`real-dify/` holds screenshots, the raw chat transcript and the bridge log from an actual Dify
+1.18.0 deployment, including the exact settings (`SSRF_PROXY_ALLOW_PRIVATE_IPS`,
+`POWERCONTEXT_BRIDGE_URL`, model provider registration).
 
-- `real-dify/01-workflow-canvas.png` - published chatflow with the recall and remember HTTP nodes.
-- `real-dify/02-webapp-chat.png` - two-turn Web App conversation; turn 2 shows the PowerContext casebook entry.
-- `real-dify/chat-transcript.json` - raw `/v1/chat-messages` responses.
-- `real-dify/bridge-log.txt` - recall/remember calls per turn, all HTTP 200.
+Key files in `real-dify/`:
+
+- `01-workflow-canvas.png` - published chatflow with the recall and remember HTTP nodes.
+- `02-webapp-chat.png` - two-turn Web App conversation; turn 2 shows the PowerContext casebook entry.
+- `chat-transcript.json` - raw `/v1/chat-messages` responses.
+- `bridge-log.txt` - recall/remember calls per turn, all HTTP 200.

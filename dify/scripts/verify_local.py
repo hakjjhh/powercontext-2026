@@ -18,7 +18,7 @@ ENV.update(
         "POWERCONTEXT_URL": f"http://127.0.0.1:{PORT_PC}",
         "POWERCONTEXT_TOKEN": "",
         "BRIDGE_TOKEN": "local-demo-token",
-        "BRIDGE_DB_PATH": str(ROOT / "state" / "verification.sqlite3"),
+        "BRIDGE_DB_PATH": str(ROOT / ".runtime" / "verification.sqlite3"),
         "BRIDGE_PORT": str(PORT_BRIDGE),
         "MOCK_POWERCONTEXT_PORT": str(PORT_PC),
     }
@@ -46,9 +46,9 @@ def wait(url: str) -> None:
 
 
 def main() -> None:
-    (ROOT / "state").mkdir(exist_ok=True)
+    (ROOT / ".runtime").mkdir(exist_ok=True)
     pc = subprocess.Popen([sys.executable, str(ROOT / "scripts" / "mock_powercontext.py")], env=ENV)
-    bridge = subprocess.Popen([sys.executable, str(ROOT / "bridge" / "server.py")], env=ENV)
+    bridge = subprocess.Popen([sys.executable, str(ROOT / "backend" / "bridge" / "server.py")], env=ENV)
     try:
         wait(f"http://127.0.0.1:{PORT_PC}/health/ready")
         wait(f"http://127.0.0.1:{PORT_BRIDGE}/health")

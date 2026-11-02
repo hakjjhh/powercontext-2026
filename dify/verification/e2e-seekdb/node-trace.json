@@ -1,0 +1,230 @@
+[
+  {
+    "workflow_run_id": "305b7570-5170-4b09-8b1e-96655c79c499",
+    "status": "succeeded",
+    "created_at": 1793616209,
+    "elapsed_time": 0.43549071899906266,
+    "elapsed_ms": 435.5,
+    "total_tokens": 67,
+    "query": "I promise to return the golden compass to you before midnight.",
+    "turn": 1,
+    "nodes": [
+      {
+        "id": "start",
+        "title": "Start",
+        "type": "start",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      },
+      {
+        "id": "prepare_request",
+        "title": "Prepare recall request",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 52.7,
+        "error": null
+      },
+      {
+        "id": "recall_memory",
+        "title": "Recall PowerContext casebook",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 130.8,
+        "error": null
+      },
+      {
+        "id": "parse_recall",
+        "title": "Parse recalled casebook",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 50.6,
+        "error": null
+      },
+      {
+        "id": "npc_llm",
+        "title": "Inspector Recall NPC",
+        "type": "llm",
+        "status": "succeeded",
+        "elapsed_ms": 14.1,
+        "error": null
+      },
+      {
+        "id": "format_memory",
+        "title": "Format durable memory",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 55.3,
+        "error": null
+      },
+      {
+        "id": "save_memory",
+        "title": "Save Inspector case note",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 72.0,
+        "error": null
+      },
+      {
+        "id": "answer",
+        "title": "Inspector reply",
+        "type": "answer",
+        "status": "succeeded",
+        "elapsed_ms": 0.2,
+        "error": null
+      }
+    ]
+  },
+  {
+    "workflow_run_id": "f049a883-fa48-4fb3-bb9d-b0f40a63a221",
+    "status": "succeeded",
+    "created_at": 1793616209,
+    "elapsed_time": 0.4287808569988556,
+    "elapsed_ms": 428.8,
+    "total_tokens": 164,
+    "query": "Honestly, I never promised you anything about a compass.",
+    "turn": 2,
+    "nodes": [
+      {
+        "id": "start",
+        "title": "Start",
+        "type": "start",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      },
+      {
+        "id": "prepare_request",
+        "title": "Prepare recall request",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 55.2,
+        "error": null
+      },
+      {
+        "id": "recall_memory",
+        "title": "Recall PowerContext casebook",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 149.8,
+        "error": null
+      },
+      {
+        "id": "parse_recall",
+        "title": "Parse recalled casebook",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 43.3,
+        "error": null
+      },
+      {
+        "id": "npc_llm",
+        "title": "Inspector Recall NPC",
+        "type": "llm",
+        "status": "succeeded",
+        "elapsed_ms": 11.1,
+        "error": null
+      },
+      {
+        "id": "format_memory",
+        "title": "Format durable memory",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 46.1,
+        "error": null
+      },
+      {
+        "id": "save_memory",
+        "title": "Save Inspector case note",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 57.9,
+        "error": null
+      },
+      {
+        "id": "answer",
+        "title": "Inspector reply",
+        "type": "answer",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      }
+    ]
+  },
+  {
+    "workflow_run_id": "ce3a804f-3432-4d6b-8b66-903b50d89915",
+    "status": "succeeded",
+    "created_at": 1793616210,
+    "elapsed_time": 0.29377802800081554,
+    "elapsed_ms": 293.8,
+    "total_tokens": 429,
+    "query": "What did I promise you before midnight?",
+    "turn": 3,
+    "nodes": [
+      {
+        "id": "start",
+        "title": "Start",
+        "type": "start",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      },
+      {
+        "id": "prepare_request",
+        "title": "Prepare recall request",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 49.6,
+        "error": null
+      },
+      {
+        "id": "recall_memory",
+        "title": "Recall PowerContext casebook",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 81.4,
+        "error": null
+      },
+      {
+        "id": "parse_recall",
+        "title": "Parse recalled casebook",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 39.9,
+        "error": null
+      },
+      {
+        "id": "npc_llm",
+        "title": "Inspector Recall NPC",
+        "type": "llm",
+        "status": "succeeded",
+        "elapsed_ms": 8.5,
+        "error": null
+      },
+      {
+        "id": "format_memory",
+        "title": "Format durable memory",
+        "type": "code",
+        "status": "succeeded",
+        "elapsed_ms": 40.5,
+        "error": null
+      },
+      {
+        "id": "save_memory",
+        "title": "Save Inspector case note",
+        "type": "http-request",
+        "status": "succeeded",
+        "elapsed_ms": 36.3,
+        "error": null
+      },
+      {
+        "id": "answer",
+        "title": "Inspector reply",
+        "type": "answer",
+        "status": "succeeded",
+        "elapsed_ms": 0.1,
+        "error": null
+      }
+    ]
+  }
+]

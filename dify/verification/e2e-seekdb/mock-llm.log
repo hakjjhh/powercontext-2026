@@ -1,0 +1,4 @@
+mock-llm: "GET /v1/models HTTP/1.1" 200 -
+mock-llm: "POST /v1/chat/completions HTTP/1.1" 200 -
+mock-llm: "POST /v1/chat/completions HTTP/1.1" 200 -
+mock-llm: "POST /v1/chat/completions HTTP/1.1" 200 -

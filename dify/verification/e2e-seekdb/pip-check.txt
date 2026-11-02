@@ -1,0 +1,14 @@
+# dependency consistency check inside the shipped PowerContext image
+2026-11-02T18:34:06+08:00
+
+$ docker exec <powercontext> python -m pip check
+No broken requirements found.
+
+$ docker exec <powercontext> python -m pip list | grep -iE "^(powercontext|pymysql|aiomysql|pylibseekdb|pyobvector|sqlalchemy|pydantic-ai-slim)"
+aiomysql==0.3.2
+powercontext==1.2.0
+pydantic-ai-slim==2.64.0
+pylibseekdb==1.4.0.post2
+PyMySQL==1.1.2
+pyobvector==0.2.29
+SQLAlchemy==2.1.6

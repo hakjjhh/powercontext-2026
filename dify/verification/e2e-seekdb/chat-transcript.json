@@ -1,0 +1,41 @@
+{
+  "user": "e2e-seekdb-player",
+  "base_url": "http://127.0.0.1:8080",
+  "bridge_reset": {
+    "ok": true,
+    "reset": "e2e-seekdb-player",
+    "scope_id": "scp_1spgb534qh73kyc4tjqgxn0rh5"
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "query": "I promise to return the golden compass to you before midnight.",
+      "status": 200,
+      "answer": "Inspector Recall: The casebook is empty, so this is your first testimony. I have written it down, suspect - and I will hold you to every word. Tell me, who else saw you that night?",
+      "conversation_id": "e596de42-383d-4319-aa29-3656857792f8",
+      "message_id": "b3a10c68-3108-4608-9939-e22752c95fca",
+      "workflow_run_id": "305b7570-5170-4b09-8b1e-96655c79c499",
+      "elapsed_ms": 518
+    },
+    {
+      "turn": 2,
+      "query": "Honestly, I never promised you anything about a compass.",
+      "status": 200,
+      "answer": "Casebook from PowerContext:\n- [observation] Player testimony: I promise to return the golden compass to you before midnight.\n\nInspector Recall: The casebook remembers you, suspect. You swore: “I promise to return the golden compass to you before midnight.” — and tonight your story changed. I have the record in front of me, so do not bother denying it. Why should I believe this new version?",
+      "conversation_id": "ff43959b-031b-4cb2-b011-e0aec80fda38",
+      "message_id": "b0ba62e1-66a6-4981-a1f1-4b53b6bbed70",
+      "workflow_run_id": "f049a883-fa48-4fb3-bb9d-b0f40a63a221",
+      "elapsed_ms": 520
+    },
+    {
+      "turn": 3,
+      "query": "What did I promise you before midnight?",
+      "status": 200,
+      "answer": "Casebook from PowerContext:\n- Player testimony: I promise to return the golden compass to you before midnight.\n- Player testimony: Honestly, I never promised you anything about a compass.\n\nInspector Recall: The casebook remembers you, suspect. You swore: “I promise to return the golden compass to you before midnight.” — and tonight your story changed. I have the record in front of me, so do not bother denying it. Why should I believe this new version?",
+      "conversation_id": "ff43959b-031b-4cb2-b011-e0aec80fda38",
+      "message_id": "07d27af3-b981-4c28-8a75-2716c498410c",
+      "workflow_run_id": "ce3a804f-3432-4d6b-8b66-903b50d89915",
+      "elapsed_ms": 356
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+name: inspector-recall
+
+# Every container talks to its peers by service name (powercontext, bridge,
+# mock-llm). The Dify stack joins the same external network, so the DSL can use
+# http://bridge:8787 and http://mock-llm:8099/v1 without any host alias.
+
+services:
+  powercontext:
+    build:
+      context: ..
+      dockerfile: ${POWERCONTEXT_DOCKERFILE:-deploy/powercontext.Dockerfile}
+    environment:
+      POWERCONTEXT_SERVER_HTTP_HOST: 0.0.0.0
+      POWERCONTEXT_SERVER_DATABASE_KIND: seekdb
+      POWERCONTEXT_SERVER_DATABASE_PATH: /data/seekdb
+      POWERCONTEXT_SERVER_ALLOW_UNAUTHENTICATED_NON_LOOPBACK: "true"
+    volumes:
+      - powercontext-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  bridge:
+    build:
+      context: ../backend/bridge
+    environment:
+      POWERCONTEXT_URL: http://powercontext:8000
+      POWERCONTEXT_TOKEN: ${POWERCONTEXT_TOKEN:-}
+      BRIDGE_TOKEN: ${BRIDGE_TOKEN:-}
+      BRIDGE_PORT: "8787"
+      BRIDGE_DB_PATH: /data/scopes.sqlite3
+    depends_on:
+      powercontext:
+        condition: service_healthy
+    volumes:
+      - bridge-state:/data
+    ports:
+      - "8787:8787"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  mock-llm:
+    image: python:3.12-slim
+    command: ["python", "/app/mock_llm.py"]
+    environment:
+      MOCK_LLM_PORT: "8099"
+      MOCK_LLM_MODEL: ${DIFY_MODEL:-local-qwen2.5-0.5b}
+    volumes:
+      - ../scripts/mock_llm.py:/app/mock_llm.py:ro
+    ports:
+      - "8099:8099"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8099/v1/models', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
+networks:
+  default:
+    name: ${DIFY_NETWORK:-inspector-recall-net}
+    external: true
+
+volumes:
+  powercontext-data:
+  bridge-state:

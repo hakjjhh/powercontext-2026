@@ -1,0 +1,14 @@
+# serving PowerContext container: inspector-recall-powercontext
+$ docker exec <powercontext> env | grep POWERCONTEXT_SERVER_DATABASE
+POWERCONTEXT_SERVER_DATABASE_KIND=seekdb
+POWERCONTEXT_SERVER_DATABASE_PATH=/data/seekdb
+--- engine data directory ---
+total 16
+drwxr-xr-x 2 root root 4096 Nov  2 10:00 etc
+drwxr-xr-x 2 root root 4096 Nov  2 10:25 log
+drwxr-xr-x 2 root root 4096 Nov  2 10:23 run
+drwxr-xr-x 5 root root 4096 Nov  2 10:00 store
+--- startup log (matching lines) ---
+https://powercontext.oceanbase.io/en/docs/reference/configuration/
+2026-11-02T10:23:14+0000 INFO powercontext.server.factory PowerContext Server is ready
+2026-11-02T10:23:14+0000 INFO uvicorn Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)

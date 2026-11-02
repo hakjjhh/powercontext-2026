@@ -7,6 +7,7 @@ import sqlite3
 import threading
 import urllib.error
 import urllib.request
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -181,6 +182,31 @@ class Handler(BaseHTTPRequestHandler):
         try:
             body = self._body()
             session_id = str(body.get("session_id", "")).strip()
+            if self.path == "/api/reset":
+                if not session_id or len(session_id) > 160:
+                    raise ValueError("session_id must contain 1-160 characters")
+                # A new idempotency key is required: reusing the old key would
+                # return the same PowerContext scope and keep its memories.
+                created = _pc_post(
+                    "/v1/scopes",
+                    {
+                        "title": f"Inspector Recall - {session_id} (reset)",
+                        "summary": "Fresh casebook after an explicit reset",
+                        "idempotency_key": f"inspector-recall:{session_id}:{uuid.uuid4().hex}",
+                    },
+                )
+                new_scope = created.get("scope_id")
+                if not new_scope:
+                    raise RuntimeError("PowerContext did not return scope_id")
+                with DB_LOCK:
+                    with sqlite3.connect(DB_PATH) as connection:
+                        connection.execute(
+                            "INSERT OR REPLACE INTO scopes(session_key, scope_id) VALUES (?, ?)",
+                            (session_id, new_scope),
+                        )
+                        connection.commit()
+                _json_response(self, 200, {"ok": True, "reset": session_id, "scope_id": new_scope})
+                return
             scope_id = _scope_for(session_id)
             if self.path == "/api/recall":
                 query = str(body.get("query", "")).strip()
@@ -196,10 +222,14 @@ class Handler(BaseHTTPRequestHandler):
                 retrieval = "prepare"
                 hit_count = 0
                 if not content:
-                    search = _pc_post(
-                        "/v1/memory/search",
-                        {"scope_id": scope_id, "query": query, "limit": 6},
-                    )
+                    try:
+                        search = _pc_post(
+                            "/v1/memory/search",
+                            {"scope_id": scope_id, "query": query, "limit": 6},
+                        )
+                    except RuntimeError:
+                        # Older/partial PowerContext builds may lack this endpoint.
+                        search = {}
                     hits = search.get("hits") or []
                     hit_count = len(hits)
                     if hits:
@@ -212,10 +242,13 @@ class Handler(BaseHTTPRequestHandler):
                         status = "fts"
                         retrieval = "memory.search"
                     else:
-                        listed = _pc_post(
-                            "/v1/memory/entries/list",
-                            {"scope_id": scope_id},
-                        )
+                        try:
+                            listed = _pc_post(
+                                "/v1/memory/entries/list",
+                                {"scope_id": scope_id},
+                            )
+                        except RuntimeError:
+                            listed = {}
                         entries = listed.get("entries") or []
                         hit_count = len(entries)
                         if entries:
@@ -263,13 +296,6 @@ class Handler(BaseHTTPRequestHandler):
                         "memory_ref": result.get("memory_ref"),
                     },
                 )
-                return
-            if self.path == "/api/reset":
-                with DB_LOCK:
-                    with sqlite3.connect(DB_PATH) as connection:
-                        connection.execute("DELETE FROM scopes WHERE session_key = ?", (session_id,))
-                        connection.commit()
-                _json_response(self, 200, {"ok": True, "reset": session_id})
                 return
             _error(self, 404, "not_found", "unknown endpoint")
         except (ValueError, json.JSONDecodeError) as error:

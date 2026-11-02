@@ -52,6 +52,19 @@ class Handler(BaseHTTPRequestHandler):
             MEMORIES.setdefault(scope_id, []).append(body["text"])
             self._json(200, {"citation": f"mock-citation-{len(MEMORIES[scope_id])}"})
             return
+        if self.path == "/v1/memory/search":
+            scope_id = body["scope_id"]
+            hits = [{"text": text} for text in MEMORIES.get(scope_id, [])]
+            self._json(200, {"hits": hits})
+            return
+        if self.path == "/v1/memory/entries/list":
+            scope_id = body["scope_id"]
+            entries = [
+                {"kind": "observation", "text": text}
+                for text in MEMORIES.get(scope_id, [])
+            ]
+            self._json(200, {"entries": entries})
+            return
         self._json(404, {"error": "not found"})
 
 
