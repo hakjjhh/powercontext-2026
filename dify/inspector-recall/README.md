@@ -107,7 +107,30 @@ POWERCONTEXT_BRIDGE_URL=http://172.18.0.1:8787
 
 ## Model provider
 
-The DSL uses `langgenius/openai_api_compatible/openai_api_compatible` with `gpt-4o-mini` as an example. After import, select any installed chat model and keep the prompt unchanged. The model is replaceable; the PowerContext memory behavior is not.
+The DSL references model name `local-qwen2.5-0.5b` through
+`langgenius/openai_api_compatible/openai_api_compatible`. Before importing,
+install that provider plugin and add one OpenAI-compatible model:
+
+| Field | Value |
+|---|---|
+| Base URL | your model gateway, e.g. `http://host.docker.internal:8099/v1` |
+| API Key | `dummy` when using the bundled mock |
+| Model name | `local-qwen2.5-0.5b` |
+
+The model is replaceable; the PowerContext memory behavior is not.
+
+### No-key self-check
+
+If no model API key is available, start the bundled mock model:
+
+```bash
+python3 dify/scripts/mock_llm.py     # OpenAI-compatible, listens on :8099
+```
+
+Then configure the provider with the values above (Base URL
+`http://host.docker.internal:8099/v1`, key `dummy`). The mock returns a
+deterministic in-character line, which is enough to verify the full
+Dify → bridge → PowerContext chain without any external service.
 
 ## Security notes
 
